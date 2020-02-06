@@ -4,7 +4,7 @@
       <script src="simulation.js"></script>
    </head>
    <body>
-      <canvas width=1000 height=1000> </canvas>
+      <canvas width=700 height=700> </canvas>
       <script>
          let v = new Vector(100, 100);
          
@@ -33,6 +33,14 @@
             }
          }); 
          document.addEventListener("mouseup", () => dragging = false);
+         document.addEventListener("mousewheel", evt => {
+            evt.stopPropagation();
+            
+            console.log(evt);
+            let scaling = evt.wheelDeltaY >= 0 ? 1.05 : 0.95;
+            camera.scaling = camera.scaling.mult(scaling);
+            console.log(camera.scaling);
+         });
 
          let associated = {position: new Vector(0,0)};
          let drawable = new VectorDrawable(v, associated);
@@ -40,7 +48,6 @@
 
          setInterval(() => { 
             //associated.position = associated.position.add(new Vector(1,1));
-            console.log(associated.position);
             camera.draw(ctx);
          }, 10);
       </script>
