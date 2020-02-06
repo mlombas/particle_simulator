@@ -1,0 +1,48 @@
+<html>
+   <head>
+      <script src="view.js"></script>
+      <script src="simulation.js"></script>
+   </head>
+   <body>
+      <canvas width=1000 height=1000> </canvas>
+      <script>
+         let v = new Vector(100, 100);
+         
+         let canvas = document.querySelector("canvas");
+         let ctx = canvas.getContext("2d");
+         let simulation = new Simulation(canvas);
+
+         let layers = new LayerDrawer();
+
+         //All camera things
+         let camera = new Camera(null, null, layers);
+         let dragging = false;
+         let lastDrag = null;
+         document.addEventListener("mousedown", evt => { 
+            dragging = true;
+            lastDrag = new Vector(evt.clientX, evt.clientY);
+            console.log("down");
+         });
+         document.addEventListener("mousemove", evt => {
+            if(dragging) {
+               let currPos = new Vector(evt.clientX, evt.clientY);
+               let drag = currPos.sub(lastDrag);
+               lastDrag = currPos;
+
+               camera.translation = camera.translation.add(drag);
+            }
+         }); 
+         document.addEventListener("mouseup", () => dragging = false);
+
+         let associated = {position: new Vector(0,0)};
+         let drawable = new VectorDrawable(v, associated);
+         layers.add(drawable, 3);
+
+         setInterval(() => { 
+            //associated.position = associated.position.add(new Vector(1,1));
+            console.log(associated.position);
+            camera.draw(ctx);
+         }, 10);
+      </script>
+   </body>
+</html>
