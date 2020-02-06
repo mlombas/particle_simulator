@@ -9,12 +9,13 @@ class Drawable {
 }
 
 class VectorDrawable extends Drawable {
-   constructor(vector, associatedObject, color) {
+   constructor(vector, associatedObject, color, minArrowLength) {
       super();
 
       this.vector = vector;
       this.associated = associatedObject || {position: Vector.zero()};
       this.color = color || "#0000FF";
+      this.minArrowLength = minArrowLength || 20;
    }
 
    draw(ctx) {
@@ -28,14 +29,14 @@ class VectorDrawable extends Drawable {
       ctx.fillStyle = "#0000FF";
 
       //Stick, draw it elongated
-      ctx.fillRect(0, -ARROWHEADLEN / 4, vectorLen, ARROWHEADLEN / 2);
+      ctx.fillRect(0, -this.minArrowLength / 4, vectorLen, this.minArrowLength / 2);
 
       //Arrow head
       ctx.translate(vectorLen, 0);
 
-      let arrowLength = vectorLen > ARROWHEADLEN ?
-         ARROWHEADLEN :
-         ARROWHEADLEN - vectorLen;
+      let arrowLength = vectorLen > this.minArrowLength ?
+         this.minArrowLength :
+         this.minArrowLength - vectorLen;
 
       ctx.beginPath();
       ctx.lineTo(0, -10);

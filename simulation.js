@@ -1,13 +1,8 @@
 const MASSTORADIUSRATIO = .5;
 const K = 9e9; //Electrical constant, rounded
 
-const ARROWHEADLEN = 20; //The length of the arrowhead, in pixels, also used in the box
-                         //For drawing purposes
-
-class Vector extends Drawable {
+class Vector {
    constructor(x, y) {
-      super();
-
       this.x = x;
       this.y = y;
    }
@@ -17,6 +12,11 @@ class Vector extends Drawable {
    }
    static one() {
       return new Vector(1, 1);
+   }
+
+   set(other) {
+      this.x = other.x;
+      this.y = other.y;
    }
 
    add(another) {

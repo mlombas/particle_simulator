@@ -1,0 +1,23 @@
+{
+  "name": "particles_simulator",
+  "version": "0.0.1",
+  "description": "An application that lets you simulate interactions between charged particles",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mocomaminecraft/particle_simulator.git"
+  },
+  "author": "Mocoma",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mocomaminecraft/particle_simulator/issues"
+  },
+  "homepage": "https://github.com/mocomaminecraft/particle_simulator#readme",
+  "devDependencies": {
+    "electron": "^8.0.0"
+  }
+}
