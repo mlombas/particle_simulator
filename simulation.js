@@ -1,4 +1,4 @@
-const MASSTORADIUSRATIO = .5;
+const MASSTORADIUSRATIO = 100;
 const K = 9e9; //Electrical constant, rounded
 
 class Vector {
@@ -25,11 +25,18 @@ class Vector {
    sub(another) {
       return this.add(another.negate());
    }
+
    mult(scalar) {
       return new Vector(scalar * this.x, scalar * this.y);
    }
+   multElementByElement(vec) {
+      return new Vector(this.x * vec.x, this.y * vec.y);
+   }
    div(scalar) {
       return this.mult(1/scalar);
+   }
+   divElementByElement(vec) {
+      return new Vector(this.x / vec.x, this.y / vec.y);
    }
 
    negate() {
@@ -64,59 +71,95 @@ class Vector {
 }
 
 class Particle {
-   constructor(mass, charge, position, color) {
-      this.color = color || (charge > 0 ? "#FF0000" : "#0000FF");
-
+   constructor(mass, charge, position, radius) {
       this.mass = mass;
       this.charge = charge;
+      this.radius = radius || mass * MASSTORADIUSRATIO;
 
       this.position = position;
       this.velocity = Vector.zero();
       this.currForce = Vector.zero();
    }
 
-   step(dt, world) {
-      let force = new Vector(0,0);
-      world.others.forEach(p => {
-         let direction = p.position.sub(this.position);
-         let currForce = direction.normalized().mult(
-            K * this.charge * p.charge / direction.lengthSq
-         );
-
-         force.add(currForce);
-      });
-
-      this.currForce = force;
-      let acceleration = force.div(mass);
-      this.velocity.add(acceleration);
+   static copy(particle) {
+      return new Particle(
+         particle.mass,
+         particle.charge,
+         particle.position,
+         particle.radius
+      );
    }
 
-   draw() {
+   step(dt, world) {
+      let force = new Vector(0,0);
+      for(let p of world.others) {
+         let direction = p.position.sub(this.position);
+
+         //If in the same spot, do not attract
+         if(direction.lengthSq == 0) continue;
+
+         let currForce = direction.normalized().mult(
+            K * this.charge * p.charge / direction.lengthSq
+         )
+         .mult(dt);
+
+         force = force.add(currForce);
+      }
+
+      this.currForce.set(force);
+      let acceleration = force.div(this.mass);
+      this.velocity.set(this.velocity.add(acceleration));
+
+      this.position.set(this.position.add(this.velocity.mult(dt)));
    }
 }
 
 class Simulation {
-   constructor(width, height) {
+   constructor(width, height, timeScale) {
       this.width = width;
       this.height = height;
+
+      this.timeScale = timeScale;
    
       this.particles = [];
    }
 
-   run() {
-      let last = Date.now().getMilliseconds();
-      setInterval(() => {
-         let now = Date.now().getMilliseconds();
-         let dt = now - last;
+   setScale(timeScale) {
+      this.timeScale = timeScale;
+   }
+
+   add(particle) {
+      this.particles.push(particle);
+   }
+
+   *getParticlesCopy() {
+      for(let particle of this.particles) {
+         yield Particle.copy(particle);
+      }
+   }
+
+   getParticles() {
+      return this.particles;
+   }
+
+   stop() {
+      clearInterval(this.interval);
+   }
+
+   start() {
+      let last = Date.now();
+      this.interval = setInterval(() => {
+         let now = Date.now();
+         let dt = (now - last) / 1e3 * this.timeScale;
          last = now;
 
-         let world = {
-            width: this.world,
-            height: this.height,
-            others: this.particles.slice()
+         for(let particle of this.particles) { 
+            particle.step(dt, {
+               width: this.width,
+               height: this.height,
+               others: this.particles.filter(p => p != particle)
+            });
          }
-         
-         for(let particle of this.particles) particle.step(dt, world);
       }, 1);
    }
 }
