@@ -37,7 +37,10 @@ class VectorDrawable extends Drawable {
       }
 
       //Vector will be drawn so its close to a value
-      let vectorLen = Math.sqrt(Math.abs(this.vector.length - VECTORNORMALLENGTH));
+      let difference = Math.abs(this.vector.length - VECTORNORMALLENGTH);
+      let vectorLen = this.vector.length > VECTORNORMALLENGTH ?
+         VECTORNORMALLENGTH + Math.sqrt(difference) :
+         VECTORNORMALLENGTH - Math.sqrt(difference);
 
       ctx.rotate(this.vector.angle);
       ctx.fillStyle = this.color;

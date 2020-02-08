@@ -99,9 +99,8 @@ class Particle {
          if(direction.lengthSq == 0) continue;
 
          let currForce = direction.normalized().mult(
-            K * this.charge * p.charge / direction.lengthSq
-         )
-         .mult(dt);
+            K * this.charge * p.charge / direction.lengthSq * dt
+         );
 
          force = force.add(currForce);
       }
@@ -119,7 +118,7 @@ class Simulation {
       this.width = width;
       this.height = height;
 
-      this.timeScale = timeScale;
+      this.timeScale = timeScale || 1;
    
       this.particles = [];
    }
