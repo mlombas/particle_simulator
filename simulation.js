@@ -99,14 +99,14 @@ class Particle {
          if(direction.lengthSq == 0) continue;
 
          let currForce = direction.normalized().mult(
-            K * this.charge * p.charge / direction.lengthSq * dt
+            K * this.charge * p.charge / direction.lengthSq 
          );
 
          force = force.add(currForce);
       }
 
       this.currForce.set(force);
-      let acceleration = force.div(this.mass);
+      let acceleration = force.div(this.mass).mult(dt);
       this.velocity.set(this.velocity.add(acceleration));
 
       this.position.set(this.position.add(this.velocity.mult(dt)));
@@ -141,6 +141,16 @@ class Simulation {
       return this.particles;
    }
 
+   step(dt) {
+      for(let particle of this.particles) { 
+         particle.step(dt, {
+            width: this.width,
+            height: this.height,
+            others: this.particles.filter(p => p != particle)
+         });
+      }
+   }
+
    stop() {
       clearInterval(this.interval);
    }
@@ -152,14 +162,8 @@ class Simulation {
          let dt = (now - last) / 1e3 * this.timeScale;
          last = now;
 
-         for(let particle of this.particles) { 
-            particle.step(dt, {
-               width: this.width,
-               height: this.height,
-               others: this.particles.filter(p => p != particle)
-            });
-         }
-      }, 1);
+         this.step(dt);
+      }, 0.001);
    }
 }
 
