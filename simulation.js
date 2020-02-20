@@ -90,26 +90,33 @@ class Particle {
       );
    }
 
-   step(dt, world) {
-      let force = new Vector(0,0);
+   reset() {
+      this.currForce.set(Vector.zero());
+   }
+
+   act(world) {
       for(let p of world.others) {
          let direction = p.position.sub(this.position);
 
          //If in the same spot, do not attract
          if(direction.lengthSq == 0) continue;
 
-         let currForce = direction.normalized().mult(
+         let force = direction.normalized().mult(
             K * this.charge * p.charge / direction.lengthSq 
          );
-
-         force = force.add(currForce);
+         p.addForce(force);
       }
+   }
 
-      this.currForce.set(force);
-      let acceleration = force.div(this.mass).mult(dt);
+   step(dt) {
+      let acceleration = this.currForce.div(this.mass).mult(dt);
       this.velocity.set(this.velocity.add(acceleration));
 
       this.position.set(this.position.add(this.velocity.mult(dt)));
+   }
+
+   addForce(f) {
+      this.currForce.set(this.currForce.add(f));
    }
 }
 
@@ -141,14 +148,18 @@ class Simulation {
       return this.particles;
    }
 
-   step(dt) {
+   update(dt) {
+      for(let particle of this.particles) particle.reset();
+
       for(let particle of this.particles) { 
-         particle.step(dt, {
+         particle.act({
             width: this.width,
             height: this.height,
             others: this.particles.filter(p => p != particle)
          });
       }
+
+      for(let particle of this.particles) particle.step(dt);
    }
 
    stop() {
@@ -162,7 +173,7 @@ class Simulation {
          let dt = (now - last) / 1e3 * this.timeScale;
          last = now;
 
-         this.step(dt);
+         this.update(dt);
       }, 0.001);
    }
 }

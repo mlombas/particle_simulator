@@ -3,12 +3,23 @@ class Pipeline {
       this.ctx = ctx;
 
       this.line = [];
+      this.tags = {};
    }
 
-   add(element, position) {
+   add(element, tag, position) {
       let index = position || this.line.length;
 
       this.line.splice(index, 0, element);
+
+      if(tag) this.tags[tag] = element;
+   }
+
+   has(tag) {
+      return this.tags[tag] != undefined;
+   }
+
+   get(tag) {
+      if(this.has(tag)) return this.tags[tag];
    }
 
    run() {
@@ -159,7 +170,7 @@ class Gridder extends PipelineElement {
       //Start with horizontal lines
       for(let x = start.x; x <= end.x; x += this.space.x){
          ctx.fillRect(
-            x - this.thickness, center.y * scaling.y,
+            x - this.thickness / 2, center.y * scaling.y,
             this.thickness, -2 * dimension.y
          );
       }

@@ -3,29 +3,41 @@
       <script src="view/drawable.js"></script>
       <script src="view/pipeline.js"></script>
       <script src="simulation.js"></script>
+      <script src="controller.js"></script>
       <style>
          canvas {
-            border: solid black 5px;
+            width: 100%;
+            height: 100%;
+            padding: 0;
             margin: 0;
+         }
+         
+         .ui {
+            position: fixed;
+               
+            border: 1px black dashed;
+            margin: 0;
+            padding: 0;
+
+            opacity: 0.3;
+         }
+
+         .ui::hover {
+            opacity: 1;
          }
       </style>
    </head>
    <body>
-      <canvas width=700 height=700> </canvas>
+      <canvas></canvas>
       <script>
-         let canvas = document.querySelector("canvas");
-         let ctx = canvas.getContext("2d");
-         let simulation = new Simulation(canvas.clientWidth, canvas.clientHeight, 1);
 
-         let particle3 = new Particle(3, .005, new Vector(0, 400), 10);
-         particle3.velocity = new Vector(300, 0);
-         let particle2 = new Particle(300, 1, new Vector(-200, 0), 50);
-         particle2.velocity = new Vector(0, -200);
-         let particle4 = new Particle(300, 1, new Vector(200, 0), 20);
-         particle4.velocity = new Vector(0, 200);
-         simulation.add(particle2);
-         simulation.add(particle3);
-         simulation.add(particle4);
+         let canvas = document.querySelector("canvas");
+         canvas.width = canvas.clientWidth;
+         canvas.height = canvas.clientHeight;
+         let ctx = canvas.getContext("2d");
+
+         let simulation = new Simulation(canvas.clientWidth, canvas.clientHeight, 1);
+         simulation.start();
 
          let layers = new LayerDrawer();
          let drawables = [];
@@ -40,11 +52,25 @@
 
          //All camera things
          let camera = new Camera();
+
+         let pipeline = new Pipeline(ctx);
+         pipeline.add(new Clearer());
+         pipeline.add(camera, "camera"); 
+         pipeline.add(new Flipper());
+         pipeline.add(new Gridder("rgba(150, 150, 150, .5)", 10, 10, 1));
+         pipeline.add(layers, "layers");
+
+         pipeline.run();
+
+         let controller = new Controller(simulation, pipeline);
+
          let dragging = false;
          let lastDrag = null;
+         let startPoint = Vector.zero();
          document.addEventListener("mousedown", evt => { 
             dragging = true;
             lastDrag = new Vector(evt.clientX, evt.clientY);
+            startPoint = lastDrag;
          });
          document.addEventListener("mousemove", evt => {
             if(dragging) {
@@ -55,23 +81,32 @@
                camera.translate(drag);
             }
          }); 
-         document.addEventListener("mouseup", () => dragging = false);
+         document.addEventListener("click", evt => {
+            dragging = false;
+
+            let endPoint = new Vector(evt.clientX, evt.clientY);
+            let dragged = endPoint.sub(startPoint);
+            if(dragged.lengthSq < 1e-12) {
+               //Have to modify it so that it coincides
+               let position = new Vector(evt.clientX, evt.clientY)
+                  .sub(new Vector(canvas.clientWidth, canvas.clientHeight).div(2))
+                  .multElementByElement(
+                     Vector.one()
+                     .divElementByElement(camera.scaling)
+                  )
+                  .sub(camera.translation)
+                  .multElementByElement(new Vector(1, -1));
+
+               controller.addParticle(position);
+            }
+         });
+
          document.addEventListener("mousewheel", evt => {
             evt.stopPropagation();
             
             let scaling = evt.wheelDeltaY >= 0 ? 1.05 : 0.95;
             camera.scale(scaling);
          });
-
-         let pipeline = new Pipeline(ctx);
-         pipeline.add(new Clearer());
-         pipeline.add(camera); 
-         pipeline.add(new Flipper());
-         pipeline.add(new Gridder("rgba(150, 150, 150, .5)", 20, 20, 1));
-         pipeline.add(layers);
-
-         simulation.start();
-         pipeline.run();
       </script>
    </body>
 </html>
